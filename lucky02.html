@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AttSpace Lucky Draw - Prizes & Members</title>
+    <title>Office Lucky Draw - scrollable</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -71,7 +71,6 @@
             letter-spacing: 2px;
         }
 
-        /* --- LEFT: PRIZE AREA --- */
         .prize-display {
             font-size: 3.5rem;
             font-weight: 900;
@@ -79,7 +78,6 @@
             text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
         }
 
-        /* --- RIGHT: DRAW AREA --- */
         .face-circle {
             width: 130px;
             height: 130px;
@@ -140,14 +138,7 @@
             padding: 10px;
         }
 
-        .btn:disabled {
-            background: #475569;
-            color: #1e293b;
-            box-shadow: none;
-            cursor: not-allowed;
-        }
-
-        /* --- HISTORY --- */
+        /* --- HISTORY SECTION (SCROLLABLE) --- */
         .history {
             margin-top: 40px;
             background: rgba(0,0,0,0.2);
@@ -156,19 +147,50 @@
             text-align: left;
         }
 
-        .history h3 { font-size: 0.9rem; margin-bottom: 15px; color: #94a3b8; }
+        .history h3 { 
+            font-size: 0.9rem; 
+            margin-bottom: 15px; 
+            color: #94a3b8; 
+            display: flex; 
+            justify-content: space-between; 
+        }
+
+        /* The scrollable container */
+        #history-list {
+            max-height: 380px; /* Fits roughly 10 winners */
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        /* Custom Scrollbar Styling */
+        #history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        #history-list::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        #history-list::-webkit-scrollbar-thumb {
+            background: var(--accent-gold);
+            border-radius: 10px;
+        }
 
         .winner-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
+            padding: 12px 0;
             border-bottom: 1px solid #334155;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .win-prize { color: var(--accent-gold); font-weight: 700; }
 
-        /* --- WINNER ANIMATION --- */
         .winner-active {
             border-color: var(--accent-gold);
             background: #1e294b;
@@ -176,28 +198,24 @@
             box-shadow: 0 0 30px rgba(251, 191, 36, 0.2);
         }
 
-        /* --- MOBILE RESPONSIVE --- */
         @media (max-width: 600px) {
             .main-stage { flex-direction: column; }
             .column { min-height: 200px; padding: 20px; }
             .prize-display { font-size: 2.5rem; }
-            .face-circle { width: 100px; height: 100px; font-size: 2rem; }
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>AttSpace Lucky Draw Event</h1>
+        <h1>Lucky Draw Event</h1>
 
         <div class="main-stage">
-            <!-- Left Column: Prize -->
             <div class="column" id="prize-col">
                 <div class="label">Current Prize</div>
                 <div class="prize-display" id="prize-text">Prize 01</div>
             </div>
 
-            <!-- Right Column: Member Drawing -->
             <div class="column" id="draw-col">
                 <div class="label">Drawing Number</div>
                 <div id="face" class="face-circle" style="background-color: #334155;">?</div>
@@ -211,22 +229,23 @@
         </div>
 
         <div class="history">
-            <h3>Recent Winners (<span id="rem-count">50</span> left)</h3>
+            <h3>
+                <span>Recent Winners</span>
+                <span><span id="rem-count">50</span> Left</span>
+            </h3>
             <div id="history-list">
-                <!-- Winners log -->
+                <!-- Winners appear here. Scrollbar appears after ~10 winners -->
+                <div id="empty-msg" style="opacity:0.3; font-style: italic;">No draws yet...</div>
             </div>
         </div>
     </div>
 
     <script>
         let availableMembers = [];
-        let winners = [];
         let currentPrizeIndex = 1;
         const totalPrizes = 50;
-
         const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F06292', '#AED581', '#FFD54F', '#4DB6AC', '#7986CB'];
 
-        // DOM Elements
         const prizeText = document.getElementById('prize-text');
         const faceEl = document.getElementById('face');
         const nameEl = document.getElementById('name');
@@ -234,16 +253,16 @@
         const historyList = document.getElementById('history-list');
         const remCount = document.getElementById('rem-count');
         const drawCol = document.getElementById('draw-col');
+        const emptyMsg = document.getElementById('empty-msg');
 
         function init() {
             availableMembers = [];
-            winners = [];
             currentPrizeIndex = 1;
             for (let i = 1; i <= 50; i++) {
                 availableMembers.push({ id: i, name: "Member " + i, color: colors[i % colors.length] });
             }
             refreshUI();
-            historyList.innerHTML = "";
+            historyList.innerHTML = '<div id="empty-msg" style="opacity:0.3; font-style: italic;">No draws yet...</div>';
         }
 
         function refreshUI() {
@@ -263,7 +282,6 @@
 
         function startDraw() {
             if (availableMembers.length === 0) return;
-
             drawBtn.disabled = true;
             drawCol.classList.remove('winner-active');
             
@@ -273,7 +291,6 @@
 
             const shuffle = setInterval(() => {
                 const rand = availableMembers[Math.floor(Math.random() * availableMembers.length)];
-                
                 faceEl.style.backgroundColor = rand.color;
                 faceEl.textContent = rand.id;
                 nameEl.textContent = rand.name;
@@ -297,6 +314,9 @@
             nameEl.textContent = winner.name;
             drawCol.classList.add('winner-active');
 
+            // Clear empty message on first win
+            if (currentPrizeIndex === 1) historyList.innerHTML = "";
+
             // Add to history
             const row = document.createElement('div');
             row.className = 'winner-row';
@@ -307,9 +327,7 @@
             availableMembers.splice(winIdx, 1);
             currentPrizeIndex++;
             
-            setTimeout(() => {
-                refreshUI();
-            }, 1000);
+            setTimeout(() => { refreshUI(); }, 1000);
         }
 
         function resetDraw() {
