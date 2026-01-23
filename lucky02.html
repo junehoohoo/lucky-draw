@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Draw - Annual Dinner FIXED</title>
+    <title>Lucky Draw - Annual Dinner PRO SYNC</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
     <!-- Firebase & Libraries -->
@@ -12,26 +12,30 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
-        :root { --bg: #0f172a; --gold: #fbbf24; --blue: #38bdf8; --card: #1e293b; --white: #ffffff; }
+        :root { --bg: #0f172a; --gold: #fbbf24; --blue: #38bdf8; --card: #1e293b; --white: #ffffff; --grey: #94a3b8; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Montserrat', sans-serif; background-color: var(--bg); color: var(--white); min-height: 100vh; display: flex; justify-content: center; padding: 20px; overflow-x: hidden; }
         .container { width: 100%; max-width: 1200px; text-align: center; }
         
-        /* View Modes (Projector) */
+        /* --- VIEW MODES (PROJECTOR) --- */
         body.view-display .controls { display: none; }
-        body.view-display .member-name { font-size: 4rem; line-height: 1.1; }
         body.view-display .prize-img { width: 450px; height: 450px; }
-        body.view-display .column { min-height: 800px; }
+        body.view-display .prize-display { font-size: 3rem; }
+        body.view-display .member-name { font-size: 4rem; line-height: 1.1; white-space: normal; max-width: 95%; word-break: keep-all; overflow-wrap: break-word; } 
+        body.view-display .column { min-height: 850px; }
 
         .main-stage { display: flex; gap: 30px; margin: 30px 0; }
         .column { flex: 1; background: var(--card); border-radius: 40px; padding: 40px; border: 3px solid #334155; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.4); position: relative; }
         
-        .cat-label { color: var(--blue); font-weight: bold; letter-spacing: 3px; font-size: 0.9rem; margin-bottom: 10px; }
+        /* Titles at the top of boxes */
+        .cat-label { color: var(--blue); font-weight: bold; letter-spacing: 3px; font-size: 0.9rem; margin-bottom: 20px; text-transform: uppercase; }
+        .win-label { color: var(--white); opacity: 0.8; font-weight: bold; letter-spacing: 3px; font-size: 0.9rem; margin-bottom: 20px; text-transform: uppercase; }
+        
         .prize-img { width: 250px; height: 250px; object-fit: contain; background: #fff; border-radius: 20px; margin-bottom: 20px; border: 5px solid var(--gold); }
-        .prize-display { font-size: 2.5rem; font-weight: 900; color: var(--gold); text-transform: uppercase; }
+        .prize-display { font-size: 2.5rem; font-weight: 900; color: var(--gold); text-transform: uppercase; line-height: 1.2; }
 
-        .member-name { font-size: 5rem; font-weight: 900; color: var(--blue); text-transform: uppercase; transition: all 0.5s; opacity: 0.3; text-align: center; }
-        .winner-active .member-name { color: var(--white); text-shadow: 0 0 30px var(--blue), 0 0 80px var(--blue); transform: scale(1.1); opacity: 1; }
+        .member-name { font-size: 4rem; font-weight: 900; color: var(--blue); text-transform: uppercase; transition: all 0.5s; opacity: 0.3; text-align: center; line-height: 1.2; }
+        .winner-active .member-name { color: var(--white); text-shadow: 0 0 30px var(--blue), 0 0 80px var(--blue); transform: scale(1.05); opacity: 1; }
 
         /* --- UI LAYOUT --- */
         .controls { max-width: 800px; margin: 0 auto; }
@@ -47,7 +51,7 @@
         .history { margin-top: 40px; text-align: left; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 20px; border: 1px solid #334155; }
         .winner-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #334155; font-size: 0.85rem; }
         
-        @media (max-width: 768px) { .main-stage { flex-direction: column; } .member-name { font-size: 3rem; } .cat-btn { padding: 15px 20px; font-size: 0.9rem; min-width: 100px; } }
+        @media (max-width: 768px) { .main-stage { flex-direction: column; } .member-name { font-size: 2.5rem; } .cat-btn { padding: 15px 20px; font-size: 0.9rem; min-width: 100px; } }
     </style>
 </head>
 <body>
@@ -56,19 +60,21 @@
         <h1 style="letter-spacing: 10px; opacity: 0.1; margin-bottom: 20px; font-weight: 900;">ANNUAL DINNER</h1>
 
         <div class="main-stage">
+            <!-- Left: Prize Section -->
             <div class="column">
                 <div id="cat-title" class="cat-label">SELECT CATEGORY</div>
                 <img id="prize-image" src="" class="prize-img" style="display:none;">
                 <div class="prize-display" id="prize-text">...</div>
             </div>
 
+            <!-- Right: Winner Section -->
             <div class="column" id="draw-col">
+                <div class="win-label">WINNER</div>
                 <div id="name" class="member-name">READY?</div>
             </div>
         </div>
 
         <div class="controls">
-            <!-- 4 Categories in a row -->
             <div class="cat-grid">
                 <button class="cat-btn" id="btn-cat1" onclick="selectCategory(1)">CAT 01</button>
                 <button class="cat-btn" id="btn-cat2" onclick="selectCategory(2)">CAT 02</button>
@@ -76,7 +82,6 @@
                 <button class="cat-btn" id="btn-cat4" onclick="selectCategory(4)">CAT 04</button>
             </div>
 
-            <!-- Main Draw Button -->
             <button class="btn-draw" id="draw-btn" onclick="handleButtonClick()" style="display:none;">Choose Category</button>
             
             <button onclick="triggerReset()" style="margin-top:40px; background:none; color:#ef4444; border:none; cursor:pointer; font-size: 10px; opacity: 0.2;">SYSTEM RESET</button>
@@ -88,13 +93,13 @@
         </div>
     </div>
 
-    <!-- Sound Effects -->
+    <!-- Sounds -->
     <audio id="audio-drum" src="https://www.soundjay.com/free-music/drum-roll-01.mp3" loop></audio>
     <audio id="audio-cheer" src="https://www.soundjay.com/human/applause-01.mp3"></audio>
 
     <script>
         // ======================================================
-        // 1. DATA (Keep this updated)
+        // 1. DATA (Update your names and prizes here)
         // ======================================================
         const MEMBER_NAMES = ["TJ", "SzeWei", "YeKee", "Nicole", "ShuHan", "ShuFan", "Chang", "ZiYang", "D.Yong", "Joel", "ZhenHao", "Ah Fatt", "BENJAMIN", "BRYAN", "FERDIANTO", "KELVIN", "MATT", "ERAGON", "MUGUTHAN", "SHAUN LEE", "SHAYNE", "THIBAN"]; 
         const PRIZE_CATEGORIES = {
@@ -149,7 +154,7 @@
         if (new URLSearchParams(window.location.search).has('view')) document.body.classList.add('view-display');
 
         // ======================================================
-        // 3. LOGIC (FIXED)
+        // 3. LOGIC
         // ======================================================
 
         db.ref('drawState').on('value', (snapshot) => {
@@ -234,8 +239,6 @@
                 const newHistory = state.history ? [...state.history] : [];
                 newHistory.unshift({ cat: cat, prizeName: prize.name, member: winner });
 
-                // WE DO NOT INCREMENT THE COUNTER HERE. 
-                // We stay on the same count so the UI shows the current prize image.
                 await db.ref('drawState').update({
                     status: 'winner', 
                     winner: winner,
@@ -249,15 +252,9 @@
             const snap = await db.ref('drawState').get();
             const state = snap.val();
             const cat = state.activeCategory;
-            
-            // INCREMENT THE COUNTER ONLY WHEN "NEXT" IS CLICKED
             const newCounters = {...state.counters};
             newCounters[cat] = state.counters[cat] + 1;
-
-            await db.ref('drawState').update({ 
-                status: 'idle', 
-                counters: newCounters 
-            });
+            await db.ref('drawState').update({ status: 'idle', counters: newCounters });
         }
 
         function updatePrizeUI(cat, count) {
