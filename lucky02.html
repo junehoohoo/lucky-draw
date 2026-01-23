@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Draw - Annual Dinner PRO SYNC</title>
+    <title>Lucky Draw - Annual Dinner FIXED</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
     <!-- Firebase & Libraries -->
@@ -17,10 +17,11 @@
         body { font-family: 'Montserrat', sans-serif; background-color: var(--bg); color: var(--white); min-height: 100vh; display: flex; justify-content: center; padding: 20px; overflow-x: hidden; }
         .container { width: 100%; max-width: 1200px; text-align: center; }
         
-        /* View Modes */
+        /* View Modes (Projector) */
         body.view-display .controls { display: none; }
-        body.view-display .member-name { font-size: 5rem; line-height: 1.1; }
+        body.view-display .member-name { font-size: 4rem; line-height: 1.1; }
         body.view-display .prize-img { width: 450px; height: 450px; }
+        body.view-display .column { min-height: 800px; }
 
         .main-stage { display: flex; gap: 30px; margin: 30px 0; }
         .column { flex: 1; background: var(--card); border-radius: 40px; padding: 40px; border: 3px solid #334155; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.4); position: relative; }
@@ -29,22 +30,22 @@
         .prize-img { width: 250px; height: 250px; object-fit: contain; background: #fff; border-radius: 20px; margin-bottom: 20px; border: 5px solid var(--gold); }
         .prize-display { font-size: 2.5rem; font-weight: 900; color: var(--gold); text-transform: uppercase; }
 
-        .member-name { font-size: 5rem; font-weight: 900; color: var(--blue); text-transform: uppercase; transition: all 0.5s; opacity: 0.4; text-align: center; }
+        .member-name { font-size: 5rem; font-weight: 900; color: var(--blue); text-transform: uppercase; transition: all 0.5s; opacity: 0.3; text-align: center; }
         .winner-active .member-name { color: var(--white); text-shadow: 0 0 30px var(--blue), 0 0 80px var(--blue); transform: scale(1.1); opacity: 1; }
 
-        /* --- UI LAYOUT (MATCHING IMAGE) --- */
+        /* --- UI LAYOUT --- */
         .controls { max-width: 800px; margin: 0 auto; }
         .cat-grid { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
-        .cat-btn { background: #334155; border: 2px solid #475569; padding: 20px 40px; color: white; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 1.2rem; transition: 0.2s; min-width: 150px; }
+        .cat-btn { background: #334155; border: 2px solid #475569; padding: 20px 40px; color: white; border-radius: 12px; cursor: pointer; font-weight: 800; font-size: 1.2rem; transition: 0.2s; min-width: 140px; }
         .cat-btn.active { border-color: var(--gold); background: #1e293b; color: var(--gold); box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
 
-        .btn-draw { width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; border: none; font-size: 2rem; font-weight: 900; cursor: pointer; background: var(--blue); color: #fff; box-shadow: 0 8px 0 #0284c7; margin: 0 auto; transition: 0.1s; }
-        .btn-draw.is-draw { background: var(--gold); box-shadow: 0 8px 0 #b45309; color: #000; }
-        .btn-draw:active { transform: translateY(4px); box-shadow: 0 4px 0 #0284c7; }
+        .btn-draw { width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; border: none; font-size: 2rem; font-weight: 900; cursor: pointer; background: var(--gold); color: #000; box-shadow: 0 8px 0 #b45309; margin: 0 auto; transition: 0.1s; }
+        .btn-draw.is-next { background: var(--blue) !important; box-shadow: 0 8px 0 #0284c7 !important; color: #fff !important; }
+        .btn-draw:active { transform: translateY(4px); box-shadow: 0 4px 0 #b45309; }
         .btn-draw:disabled { background: #475569 !important; box-shadow: none !important; opacity: 0.5; cursor: not-allowed; }
 
         .history { margin-top: 40px; text-align: left; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 20px; border: 1px solid #334155; }
-        .winner-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #334155; font-size: 0.9rem; }
+        .winner-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #334155; font-size: 0.85rem; }
         
         @media (max-width: 768px) { .main-stage { flex-direction: column; } .member-name { font-size: 3rem; } .cat-btn { padding: 15px 20px; font-size: 0.9rem; min-width: 100px; } }
     </style>
@@ -52,7 +53,7 @@
 <body>
 
     <div class="container">
-        <h1 style="letter-spacing: 10px; opacity: 0.2; margin-bottom: 20px; font-weight: 900;">ANNUAL DINNER</h1>
+        <h1 style="letter-spacing: 10px; opacity: 0.1; margin-bottom: 20px; font-weight: 900;">ANNUAL DINNER</h1>
 
         <div class="main-stage">
             <div class="column">
@@ -78,7 +79,7 @@
             <!-- Main Draw Button -->
             <button class="btn-draw" id="draw-btn" onclick="handleButtonClick()" style="display:none;">Choose Category</button>
             
-            <button onclick="triggerReset()" style="margin-top:30px; background:none; color:#ef4444; border:none; cursor:pointer; font-size: 10px; opacity: 0.3;">SYSTEM RESET</button>
+            <button onclick="triggerReset()" style="margin-top:40px; background:none; color:#ef4444; border:none; cursor:pointer; font-size: 10px; opacity: 0.2;">SYSTEM RESET</button>
         </div>
 
         <div class="history">
@@ -87,7 +88,7 @@
         </div>
     </div>
 
-    <!-- Hidden Audio Elements -->
+    <!-- Sound Effects -->
     <audio id="audio-drum" src="https://www.soundjay.com/free-music/drum-roll-01.mp3" loop></audio>
     <audio id="audio-cheer" src="https://www.soundjay.com/human/applause-01.mp3"></audio>
 
@@ -123,7 +124,7 @@
         };
 
         // ======================================================
-        // 2. FIREBASE CONFIG (Sync yours here)
+        // 2. FIREBASE CONFIG
         // ======================================================
         const firebaseConfig = {
   apiKey: "AIzaSyBx02gUR9RVNaGZ0KTM6OCRJDuJwM_hvfs",
@@ -142,14 +143,13 @@
         let currentActiveCat = null;
         let hasCelebrated = false;
 
-        // Sound Elements
         const sndDrum = document.getElementById('audio-drum');
         const sndCheer = document.getElementById('audio-cheer');
 
         if (new URLSearchParams(window.location.search).has('view')) document.body.classList.add('view-display');
 
         // ======================================================
-        // 3. MAIN SYNC LOGIC
+        // 3. LOGIC (FIXED)
         // ======================================================
 
         db.ref('drawState').on('value', (snapshot) => {
@@ -173,13 +173,13 @@
                 resetWinnerUI();
                 sndDrum.pause(); sndDrum.currentTime = 0;
                 btn.textContent = "Draw Now";
-                btn.classList.add('is-draw');
+                btn.classList.remove('is-next');
                 btn.disabled = false;
             } 
             else if (data.status === 'shuffling') {
                 btn.disabled = true;
                 btn.textContent = "Drawing...";
-                sndDrum.play(); // Start sound on both screens
+                sndDrum.play();
                 startShuffleUI();
             } 
             else if (data.status === 'winner') {
@@ -187,12 +187,8 @@
                 sndDrum.pause(); sndDrum.currentTime = 0;
                 btn.disabled = false;
                 btn.textContent = "Next Prize";
-                btn.classList.remove('is-draw');
-                if (!hasCelebrated) { 
-                    sndCheer.play(); // Play cheer
-                    launchCelebration(); 
-                    hasCelebrated = true; 
-                }
+                btn.classList.add('is-next');
+                if (!hasCelebrated) { sndCheer.play(); launchCelebration(); hasCelebrated = true; }
             }
             renderHistory(data.history);
         });
@@ -223,9 +219,9 @@
             const state = snap.val();
             const pool = state.available;
             const cat = state.activeCategory;
-            const idx = state.counters[cat];
+            const count = state.counters[cat];
 
-            if (idx > 5) return alert("Category Finished!");
+            if (count > 5) return alert("Category Finished!");
             if (pool.length === 0) return alert("No members left!");
 
             db.ref('drawState').update({ status: 'shuffling' });
@@ -233,25 +229,37 @@
             setTimeout(async () => {
                 const winIdx = Math.floor(Math.random() * pool.length);
                 const winner = pool[winIdx];
-                const prize = PRIZE_CATEGORIES[cat][idx - 1];
+                const prize = PRIZE_CATEGORIES[cat][count - 1];
 
                 const newHistory = state.history ? [...state.history] : [];
                 newHistory.unshift({ cat: cat, prizeName: prize.name, member: winner });
-                const newCounters = {...state.counters}; newCounters[cat] = idx + 1;
 
+                // WE DO NOT INCREMENT THE COUNTER HERE. 
+                // We stay on the same count so the UI shows the current prize image.
                 await db.ref('drawState').update({
-                    status: 'winner', winner: winner,
+                    status: 'winner', 
+                    winner: winner,
                     available: pool.filter((_, i) => i !== winIdx),
-                    history: newHistory, counters: newCounters
+                    history: newHistory
                 });
-            }, 4000); // 4 Seconds of drum roll
+            }, 4000); 
         }
 
         async function triggerNext() {
-            await db.ref('drawState').update({ status: 'idle' });
+            const snap = await db.ref('drawState').get();
+            const state = snap.val();
+            const cat = state.activeCategory;
+            
+            // INCREMENT THE COUNTER ONLY WHEN "NEXT" IS CLICKED
+            const newCounters = {...state.counters};
+            newCounters[cat] = state.counters[cat] + 1;
+
+            await db.ref('drawState').update({ 
+                status: 'idle', 
+                counters: newCounters 
+            });
         }
 
-        // --- UI HELPERS ---
         function updatePrizeUI(cat, count) {
             const idx = count - 1;
             const prize = (PRIZE_CATEGORIES[cat] && PRIZE_CATEGORIES[cat][idx]) || { name: "Category Done", img: "" };
