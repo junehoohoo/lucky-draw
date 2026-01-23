@@ -9,47 +9,50 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    
+    <!-- Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
         :root { --bg: #0f172a; --gold: #fbbf24; --blue: #38bdf8; --card: #1e293b; --white: #ffffff; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Montserrat', sans-serif; background-color: var(--bg); color: var(--white); min-height: 100vh; display: flex; justify-content: center; padding: 20px; }
+        body { font-family: 'Montserrat', sans-serif; background-color: var(--bg); color: var(--white); min-height: 100vh; display: flex; justify-content: center; padding: 20px; overflow-x: hidden; }
         .container { width: 100%; max-width: 1200px; text-align: center; }
         
         /* --- VIEW MODES --- */
         body.view-display .controls { display: none; }
         body.view-display .prize-img { width: 450px; height: 450px; }
         body.view-display .prize-display { font-size: 2rem; }
-        body.view-display .member-name { font-size: 5rem; } /* HUGE Name on Projector */
+        body.view-display .member-name { font-size: 5rem; line-height: 1; } 
         body.view-display .column { min-height: 800px; }
 
         .main-stage { display: flex; gap: 30px; margin: 40px 0; }
-        .column { flex: 1; background: var(--card); border-radius: 30px; padding: 40px; border: 3px solid #334155; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .column { flex: 1; background: var(--card); border-radius: 40px; padding: 40px; border: 3px solid #334155; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.4); position: relative; }
         
         /* Prize Display */
         .prize-img { width: 250px; height: 250px; object-fit: contain; background: #fff; border-radius: 20px; margin-bottom: 20px; border: 5px solid var(--gold); }
         .prize-display { font-size: 2.5rem; font-weight: 900; color: var(--gold); text-transform: uppercase; }
 
-        /* --- WINNER NAME STYLING (THE HERO) --- */
-        .face-circle { display: none; } /* HIDDEN AS REQUESTED */
-        
+        /* --- WINNER NAME STYLING --- */
         .member-name { 
-            font-size: 5rem; /* Larger on normal view */
+            font-size: 5rem; 
             font-weight: 900; 
             color: var(--blue); 
             text-transform: uppercase;
             letter-spacing: -2px;
-            transition: all 0.3s ease;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             min-height: 1.2em;
             display: flex;
             align-items: center;
+            opacity: 0.6;
         }
 
-        /* Effect when winner is found */
+        /* Winner Celebration State */
         .winner-active .member-name {
             color: var(--white);
-            text-shadow: 0 0 30px var(--blue), 0 0 60px var(--blue);
-            transform: scale(1.1);
+            text-shadow: 0 0 20px var(--blue), 0 0 40px var(--blue), 0 0 80px var(--blue);
+            transform: scale(1.15);
+            opacity: 1;
         }
 
         /* --- BUTTONS --- */
@@ -59,30 +62,29 @@
         .btn-draw:disabled { background: #475569 !important; box-shadow: none !important; color: #1e293b !important; cursor: not-allowed; }
 
         /* History */
-        .history { margin-top: 50px; text-align: left; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 20px; }
-        #history-list { max-height: 300px; overflow-y: auto; }
+        .history { margin-top: 50px; text-align: left; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 20px; border: 1px solid #334155; }
+        #history-list { max-height: 300px; overflow-y: auto; padding-right: 10px; }
+        #history-list::-webkit-scrollbar { width: 6px; }
+        #history-list::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
         .winner-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #334155; }
         
-        .winner-active { border-color: var(--gold); }
         @media (max-width: 768px) { .main-stage { flex-direction: column; } .member-name { font-size: 3rem; } }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1 style="letter-spacing: 5px; opacity: 0.5;">ANNUAL DINNER LUCKY DRAW</h1>
+        <h1 style="letter-spacing: 5px; opacity: 0.3; margin-top: 20px;">ANNUAL DINNER LUCKY DRAW</h1>
 
         <div class="main-stage">
-            <!-- Left: Prize -->
             <div class="column">
-                <div style="color: #94a3b8; font-weight: bold; margin-bottom: 10px; letter-spacing: 2px;">PRIZE</div>
+                <div style="color: #94a3b8; font-weight: bold; margin-bottom: 15px; letter-spacing: 2px; font-size: 0.8rem;">CURRENT PRIZE</div>
                 <img id="prize-image" src="" class="prize-img">
-                <div class="prize-display" id="prize-text">Loading...</div>
+                <div class="prize-display" id="prize-text">...</div>
             </div>
 
-            <!-- Right: Winner Name Only -->
             <div class="column" id="draw-col">
-                <div style="color: #94a3b8; font-weight: bold; margin-bottom: 10px; letter-spacing: 2px;">WINNER</div>
+                <div style="color: #94a3b8; font-weight: bold; margin-bottom: 15px; letter-spacing: 2px; font-size: 0.8rem;">WINNER</div>
                 <div id="name" class="member-name">Ready?</div>
             </div>
         </div>
@@ -90,11 +92,11 @@
         <div class="controls">
             <button class="btn-draw" id="draw-btn" onclick="handleButtonClick()">Draw Now</button>
             <br>
-            <button onclick="triggerReset()" style="margin-top:40px; background:none; color:#ef4444; border:none; cursor:pointer; font-size: 12px; opacity: 0.5;">Reset System</button>
+            <button onclick="triggerReset()" style="margin-top:40px; background:none; color:#ef4444; border:none; cursor:pointer; font-size: 11px; opacity: 0.4;">RESET SYSTEM</button>
         </div>
 
         <div class="history">
-            <h3 style="color:var(--gold); margin-bottom: 15px;">WINNERS LOG (<span id="rem-count">--</span> left)</h3>
+            <h3 style="color:var(--gold); margin-bottom: 15px; font-size: 0.9rem;">WINNERS LOG (<span id="rem-count">--</span> left)</h3>
             <div id="history-list"></div>
         </div>
     </div>
@@ -135,7 +137,7 @@
         // ======================================================
         // 2. FIREBASE CONFIG
         // ======================================================
-         const firebaseConfig = {
+        const firebaseConfig = {
   apiKey: "AIzaSyBx02gUR9RVNaGZ0KTM6OCRJDuJwM_hvfs",
   authDomain: "attspace-lucky-draw.firebaseapp.com",
   databaseURL: "https://attspace-lucky-draw-default-rtdb.firebaseio.com",
@@ -149,6 +151,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         let currentStatus = 'idle';
+        let hasCelebrated = false; // Prevents confetti looping
 
         if (new URLSearchParams(window.location.search).has('view')) document.body.classList.add('view-display');
 
@@ -167,6 +170,7 @@
             document.getElementById('rem-count').textContent = data.remCount;
 
             if (data.status === 'idle') {
+                hasCelebrated = false; // Reset for next round
                 resetWinnerUI();
                 btn.textContent = "Draw Now";
                 btn.classList.remove('btn-next');
@@ -182,6 +186,12 @@
                 btn.disabled = false;
                 btn.textContent = "Next Prize";
                 btn.classList.add('btn-next');
+                
+                // CELEBRATE!
+                if (!hasCelebrated) {
+                    launchCelebration();
+                    hasCelebrated = true;
+                }
             }
 
             renderHistory(data.history);
@@ -205,7 +215,7 @@
                 await db.ref('drawState').set(state);
             }
 
-            if (state.available.length === 0) return alert("Finished!");
+            if (state.available.length === 0) return alert("All members have won!");
 
             db.ref('drawState').update({ status: 'shuffling' });
 
@@ -234,6 +244,28 @@
             const snap = await db.ref('drawState').get();
             const state = snap.val();
             await db.ref('drawState').update({ status: 'idle', currentPrize: state.currentPrize + 1 });
+        }
+
+        // --- CELEBRATION EFFECT ---
+        function launchCelebration() {
+            // Left burst
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { x: 0.1, y: 0.5 }
+            });
+            // Right burst
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { x: 0.9, y: 0.5 }
+            });
+            // Center top
+            confetti({
+                particleCount: 100,
+                spread: 100,
+                origin: { y: 0.3 }
+            });
         }
 
         // --- UI HELPERS ---
