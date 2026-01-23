@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYNC Lucky Draw - Annual Dinner</title>
+    <title>Lucky Draw - Annual Dinner PRO SYNC</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
     <!-- Firebase SDKs -->
@@ -11,97 +11,131 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
 
     <style>
-        :root {
-            --bg: #0f172a; --gold: #fbbf24; --blue: #38bdf8; --card: #1e293b; --white: #ffffff;
-        }
+        :root { --bg: #0f172a; --gold: #fbbf24; --blue: #38bdf8; --card: #1e293b; --white: #ffffff; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: var(--bg);
-            color: var(--white);
-            min-height: 100vh;
-            display: flex; justify-content: center; padding: 20px;
-            overflow-x: hidden;
-        }
-        .container { width: 100%; max-width: 1000px; text-align: center; }
+        body { font-family: 'Montserrat', sans-serif; background-color: var(--bg); color: var(--white); min-height: 100vh; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 1200px; text-align: center; }
         
-        /* --- MODE-BASED STYLING --- */
-        /* Hide buttons on Projector/Display View */
-        body.view-display .controls, body.view-display .btn-reset { display: none; }
-        /* Make fonts HUGE on Projector View */
-        body.view-display .prize-display { font-size: 8rem; }
-        body.view-display .member-name { font-size: 4rem; }
-        body.view-display .face-circle { width: 300px; height: 300px; font-size: 6rem; }
-        body.view-display .column { min-height: 600px; }
+        /* --- VIEW MODES --- */
+        body.view-display .controls { display: none; }
+        body.view-display .prize-img { width: 450px; height: 450px; }
+        body.view-display .prize-display { font-size: 4rem; }
+        body.view-display .member-name { font-size: 10rem; } /* HUGE Name on Projector */
+        body.view-display .column { min-height: 800px; }
 
-        /* --- LAYOUT --- */
-        .main-stage { display: flex; gap: 30px; margin: 40px 0; transition: 0.5s; }
-        .column { 
-            flex: 1; background: var(--card); border-radius: 30px; 
-            padding: 40px; border: 3px solid #334155; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-        .prize-display { font-size: 4rem; font-weight: 900; color: var(--gold); }
-        .face-circle { 
-            width: 150px; height: 150px; border-radius: 50%; 
-            display: flex; justify-content: center; align-items: center; 
-            font-size: 4rem; font-weight: 900; margin-bottom: 20px;
-            border: 6px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-        .member-name { font-size: 2rem; font-weight: 700; color: var(--blue); }
+        .main-stage { display: flex; gap: 30px; margin: 40px 0; }
+        .column { flex: 1; background: var(--card); border-radius: 30px; padding: 40px; border: 3px solid #334155; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        
+        /* Prize Display */
+        .prize-img { width: 250px; height: 250px; object-fit: contain; background: #fff; border-radius: 20px; margin-bottom: 20px; border: 5px solid var(--gold); }
+        .prize-display { font-size: 2.5rem; font-weight: 900; color: var(--gold); text-transform: uppercase; }
 
-        /* --- BUTTONS (Mobile Controller) --- */
-        .controls { max-width: 400px; margin: 0 auto; }
-        .btn { 
-            width: 100%; padding: 25px; border-radius: 20px; border: none; 
-            font-size: 1.5rem; font-weight: 900; cursor: pointer; text-transform: uppercase;
+        /* --- WINNER NAME STYLING (THE HERO) --- */
+        .face-circle { display: none; } /* HIDDEN AS REQUESTED */
+        
+        .member-name { 
+            font-size: 5rem; /* Larger on normal view */
+            font-weight: 900; 
+            color: var(--blue); 
+            text-transform: uppercase;
+            letter-spacing: -2px;
+            transition: all 0.3s ease;
+            min-height: 1.2em;
+            display: flex;
+            align-items: center;
         }
-        .btn-draw { background: var(--gold); box-shadow: 0 8px 0 #b45309; }
+
+        /* Effect when winner is found */
+        .winner-active .member-name {
+            color: var(--white);
+            text-shadow: 0 0 30px var(--blue), 0 0 60px var(--blue);
+            transform: scale(1.1);
+        }
+
+        /* --- BUTTONS --- */
+        .btn-draw { width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; border: none; font-size: 1.8rem; font-weight: 900; cursor: pointer; background: var(--gold); box-shadow: 0 8px 0 #b45309; color: #000; transition: 0.2s; }
+        .btn-next { background: var(--blue) !important; box-shadow: 0 8px 0 #0284c7 !important; color: white !important; }
         .btn-draw:active { transform: translateY(4px); box-shadow: 0 4px 0 #b45309; }
+        .btn-draw:disabled { background: #475569 !important; box-shadow: none !important; color: #1e293b !important; cursor: not-allowed; }
 
-        /* --- HISTORY --- */
+        /* History */
         .history { margin-top: 50px; text-align: left; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 20px; }
         #history-list { max-height: 300px; overflow-y: auto; }
         .winner-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #334155; }
-        .winner-active { border-color: var(--gold); animation: pulse 1s infinite alternate; }
-        @keyframes pulse { from { box-shadow: 0 0 20px rgba(251,191,36,0.2); } to { box-shadow: 0 0 50px rgba(251,191,36,0.5); } }
-
-        @media (max-width: 768px) {
-            .main-stage { flex-direction: column; }
-        }
+        
+        .winner-active { border-color: var(--gold); }
+        @media (max-width: 768px) { .main-stage { flex-direction: column; } .member-name { font-size: 3rem; } }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1 id="title">ANNUAL DINNER LUCKY DRAW</h1>
+        <h1 style="letter-spacing: 5px; opacity: 0.5;">ANNUAL DINNER LUCKY DRAW</h1>
 
         <div class="main-stage">
+            <!-- Left: Prize -->
             <div class="column">
-                <div style="color: #94a3b8; font-weight: bold; margin-bottom: 10px;">CURRENT PRIZE</div>
-                <div class="prize-display" id="prize-text">Prize 01</div>
+                <div style="color: #94a3b8; font-weight: bold; margin-bottom: 10px; letter-spacing: 2px;">PRIZE</div>
+                <img id="prize-image" src="" class="prize-img">
+                <div class="prize-display" id="prize-text">Loading...</div>
             </div>
+
+            <!-- Right: Winner Name Only -->
             <div class="column" id="draw-col">
-                <div style="color: #94a3b8; font-weight: bold; margin-bottom: 10px;">WINNER</div>
-                <div id="face" class="face-circle" style="background-color: #334155;">?</div>
+                <div style="color: #94a3b8; font-weight: bold; margin-bottom: 10px; letter-spacing: 2px;">WINNER</div>
                 <div id="name" class="member-name">Ready?</div>
             </div>
         </div>
 
         <div class="controls">
-            <button class="btn btn-draw" id="draw-btn" onclick="triggerDraw()">Draw Now</button>
-            <button onclick="triggerReset()" style="margin-top:20px; background:none; color:red; border:none; cursor:pointer;">Reset All Data</button>
+            <button class="btn-draw" id="draw-btn" onclick="handleButtonClick()">Draw Now</button>
+            <br>
+            <button onclick="triggerReset()" style="margin-top:40px; background:none; color:#ef4444; border:none; cursor:pointer; font-size: 12px; opacity: 0.5;">Reset System</button>
         </div>
 
         <div class="history">
-            <h3 style="margin-bottom:15px; color:var(--gold)">WINNERS CIRCLE (<span id="rem-count">50</span> left)</h3>
+            <h3 style="color:var(--gold); margin-bottom: 15px;">WINNERS LOG (<span id="rem-count">--</span> left)</h3>
             <div id="history-list"></div>
         </div>
     </div>
 
     <script>
-        // 1. YOUR FIREBASE CONFIG (Replace this with yours)
-        const firebaseConfig = {
+        // ======================================================
+        // 1. DATA (Update your members and prizes)
+        // ======================================================
+        const MEMBER_NAMES = ["TJ", "SzeWei", "YeKee", "Nicole", "ShuHan", "ShuFan", "Chang", "ZiYang", "D.Yong", "Joel", "ZhenHao", "Ah Fatt"]; 
+        const PRIZE_LIST = [
+            { name: "Jasmine Sunwhite Super Import (Wangi Thailand)", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA0ODAyM18y.jpg" },
+
+            { name: "Nongshim Shin Ramyun Bowl", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTE0NDQ1NDFfMQ==.jpg" },
+
+            { name: "Maggi 2 Minute Curry 5+1 Instant Noodle", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA1OTU4OF9uZXcx.jpg" },
+
+            { name: "Red Eagle Cooking Oil", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA1NjI1Ml8x.jpg" },
+
+            { name: "Gula Prai Coarse Grain Sugar", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA3NzMxODVfMQ==.jpg" },
+
+            { name: "Ayam Brand Coconut Milk", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTAyNjk0OF8x.jpg" },
+
+            { name: "Lee Kum Kee Panda Oyster Sauce", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTg4ODQ5OF9uZXcx.jpg" },
+
+            { name: "Mi Sedaap Cup Noodle Goreng", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTcxNzU2OV8x.jpg" },
+
+            { name: "Nestle Nestum 3 In 1 Original", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NDA2MTc5M19uZXcx.jpg" },
+
+
+            { name: "Kara Coconut Cream", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTI2MjA3NzdfMQ==.jpg" },
+
+
+            { name: "Megah Claypot Yee Mee", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTcyMzM5M18y.jpg" },
+
+            { name: "Nestle School Pack", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTAxMDA1NV8y.jpg" }
+        ];
+
+        // ======================================================
+        // 2. FIREBASE CONFIG
+        // ======================================================
+         const firebaseConfig = {
   apiKey: "AIzaSyBx02gUR9RVNaGZ0KTM6OCRJDuJwM_hvfs",
   authDomain: "attspace-lucky-draw.firebaseapp.com",
   databaseURL: "https://attspace-lucky-draw-default-rtdb.firebaseio.com",
@@ -112,97 +146,129 @@
   measurementId: "G-ZLV6GBF1WQ"
 };
 
-
-        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        let currentStatus = 'idle';
 
-        // 2. VIEW DETECTION
-        const urlParams = new URLSearchParams(window.location.search);
-        const isDisplay = urlParams.has('view'); // Add ?view=display to URL for projector
-        if (isDisplay) document.body.classList.add('view-display');
+        if (new URLSearchParams(window.location.search).has('view')) document.body.classList.add('view-display');
 
-        // 3. APP STATE
-        let availableMembers = [];
-        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F06292', '#AED581', '#FFD54F', '#4DB6AC', '#7986CB'];
+        // ======================================================
+        // 3. MAIN SYNC LOGIC
+        // ======================================================
 
-        // 4. LISTEN FOR CHANGES (This is the "Sync" Magic)
         db.ref('drawState').on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data) return;
 
-            // Sync Prize & Counts
-            document.getElementById('prize-text').textContent = "Prize " + data.currentPrize.toString().padStart(2, '0');
+            currentStatus = data.status;
+            const btn = document.getElementById('draw-btn');
+
+            updatePrizeUI(data.currentPrize);
             document.getElementById('rem-count').textContent = data.remCount;
 
-            // Sync Shuffling State
-            if (data.status === 'shuffling') {
-                startShuffleUI(data.seed); 
-            } else if (data.status === 'winner') {
+            if (data.status === 'idle') {
+                resetWinnerUI();
+                btn.textContent = "Draw Now";
+                btn.classList.remove('btn-next');
+                btn.disabled = false;
+            } 
+            else if (data.status === 'shuffling') {
+                btn.disabled = true;
+                btn.textContent = "Drawing...";
+                startShuffleUI();
+            } 
+            else if (data.status === 'winner') {
                 stopShuffleUI(data.winner);
-            } else {
-                resetUI();
+                btn.disabled = false;
+                btn.textContent = "Next Prize";
+                btn.classList.add('btn-next');
             }
 
-            // Sync History
             renderHistory(data.history);
         });
 
-        // 5. ACTIONS (Triggered by Mobile)
-        function triggerDraw() {
-            // Pick a random winner and a seed for the shuffle animation
-            db.ref('drawState').once('value', (snap) => {
-                const state = snap.val();
-                const members = state.available || generateInitialMembers();
-                const winIdx = Math.floor(Math.random() * members.length);
-                const winner = members[winIdx];
-                
-                // Update Firebase -> All screens react
-                db.ref('drawState').update({
-                    status: 'shuffling',
-                    seed: Math.random() // Tells screens to start randomizing
-                });
-
-                // Wait 3 seconds then set final winner
-                setTimeout(() => {
-                    const newAvailable = members.filter((_, i) => i !== winIdx);
-                    const newHistory = state.history ? [...state.history] : [];
-                    newHistory.unshift({ prize: state.currentPrize, member: winner });
-
-                    db.ref('drawState').update({
-                        status: 'winner',
-                        winner: winner,
-                        available: newAvailable,
-                        history: newHistory,
-                        currentPrize: state.currentPrize + 1,
-                        remCount: newAvailable.length
-                    });
-                }, 3000);
-            });
+        function handleButtonClick() {
+            if (currentStatus === 'idle') triggerDraw();
+            else if (currentStatus === 'winner') triggerNext();
         }
 
-        // --- UI ANIMATION LOGIC ---
+        async function triggerDraw() {
+            const snap = await db.ref('drawState').get();
+            let state = snap.val();
+
+            if (!state) {
+                state = {
+                    status: 'idle', currentPrize: 1, remCount: MEMBER_NAMES.length,
+                    available: MEMBER_NAMES.map(name => ({ name: name })),
+                    history: []
+                };
+                await db.ref('drawState').set(state);
+            }
+
+            if (state.available.length === 0) return alert("Finished!");
+
+            db.ref('drawState').update({ status: 'shuffling' });
+
+            setTimeout(async () => {
+                const pool = state.available;
+                const winIdx = Math.floor(Math.random() * pool.length);
+                const winner = pool[winIdx];
+                
+                const newAvailable = pool.filter((_, i) => i !== winIdx);
+                const newHistory = state.history ? [...state.history] : [];
+                const pName = PRIZE_LIST[state.currentPrize - 1]?.name || "Prize";
+                
+                newHistory.unshift({ prize: pName, member: winner });
+
+                await db.ref('drawState').update({
+                    status: 'winner',
+                    winner: winner,
+                    available: newAvailable,
+                    history: newHistory,
+                    remCount: newAvailable.length
+                });
+            }, 3000);
+        }
+
+        async function triggerNext() {
+            const snap = await db.ref('drawState').get();
+            const state = snap.val();
+            await db.ref('drawState').update({ status: 'idle', currentPrize: state.currentPrize + 1 });
+        }
+
+        // --- UI HELPERS ---
+        function updatePrizeUI(prizeNumber) {
+            const idx = prizeNumber - 1;
+            const prize = PRIZE_LIST[idx] || { name: "Event Finished", img: "" };
+            document.getElementById('prize-text').textContent = prize.name;
+            if (prize.img) {
+                document.getElementById('prize-image').src = prize.img;
+                document.getElementById('prize-image').style.display = "block";
+            } else {
+                document.getElementById('prize-image').style.display = "none";
+            }
+        }
+
         let shuffleInterval;
         function startShuffleUI() {
             clearInterval(shuffleInterval);
             document.getElementById('draw-col').classList.remove('winner-active');
             shuffleInterval = setInterval(() => {
-                const randomMember = { id: Math.floor(Math.random()*50)+1, name: "Drawing...", color: colors[Math.floor(Math.random()*colors.length)] };
-                updateMemberDisplay(randomMember);
+                const n = MEMBER_NAMES[Math.floor(Math.random() * MEMBER_NAMES.length)];
+                document.getElementById('name').textContent = n;
             }, 80);
         }
 
         function stopShuffleUI(winner) {
             clearInterval(shuffleInterval);
-            updateMemberDisplay(winner);
+            document.getElementById('name').textContent = winner.name;
             document.getElementById('draw-col').classList.add('winner-active');
         }
 
-        function updateMemberDisplay(m) {
-            const f = document.getElementById('face');
-            f.style.backgroundColor = m.color;
-            f.textContent = m.id;
-            document.getElementById('name').textContent = m.name;
+        function resetWinnerUI() {
+            clearInterval(shuffleInterval);
+            document.getElementById('name').textContent = "Ready?";
+            document.getElementById('draw-col').classList.remove('winner-active');
         }
 
         function renderHistory(hist) {
@@ -212,30 +278,18 @@
             hist.forEach(h => {
                 const row = document.createElement('div');
                 row.className = "winner-row";
-                row.innerHTML = `<b style="color:var(--gold)">Prize ${h.prize.toString().padStart(2,'0')}</b> <span>${h.member.name}</span>`;
+                row.innerHTML = `<b style="color:var(--gold)">${h.prize}</b> <span>${h.member.name}</span>`;
                 list.appendChild(row);
             });
         }
 
-        function triggerReset() {
-            if(!confirm("Reset everything?")) return;
-            db.ref('drawState').set({
-                status: 'idle', currentPrize: 1, remCount: 50,
-                available: generateInitialMembers(), history: []
+        async function triggerReset() {
+            if(!confirm("Reset everything to Prize 01?")) return;
+            await db.ref('drawState').set({
+                status: 'idle', currentPrize: 1, remCount: MEMBER_NAMES.length,
+                available: MEMBER_NAMES.map(name => ({ name: name })),
+                history: []
             });
-        }
-
-        function generateInitialMembers() {
-            const arr = [];
-            for(let i=1; i<=50; i++) arr.push({id:i, name:"Member "+i, color:colors[i%colors.length]});
-            return arr;
-        }
-
-        function resetUI() {
-            clearInterval(shuffleInterval);
-            document.getElementById('face').style.backgroundColor = "#334155";
-            document.getElementById('face').textContent = "?";
-            document.getElementById('name').textContent = "Ready?";
         }
     </script>
 </body>
