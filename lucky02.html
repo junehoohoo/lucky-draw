@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lucky Draw - Annual Dinner PRO SYNC</title>
+    <title>Lucky Draw - Categorized Annual Dinner</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
-    
-    <!-- Confetti Library -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <style>
@@ -19,54 +16,35 @@
         body { font-family: 'Montserrat', sans-serif; background-color: var(--bg); color: var(--white); min-height: 100vh; display: flex; justify-content: center; padding: 20px; overflow-x: hidden; }
         .container { width: 100%; max-width: 1200px; text-align: center; }
         
-        /* --- VIEW MODES --- */
+        /* View Modes */
         body.view-display .controls { display: none; }
+        body.view-display .member-name { font-size: 5rem; }
         body.view-display .prize-img { width: 450px; height: 450px; }
-        body.view-display .prize-display { font-size: 2rem; }
-        body.view-display .member-name { font-size: 5rem; line-height: 1; } 
-        body.view-display .column { min-height: 800px; }
 
-        .main-stage { display: flex; gap: 30px; margin: 40px 0; }
-        .column { flex: 1; background: var(--card); border-radius: 40px; padding: 40px; border: 3px solid #334155; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.4); position: relative; }
+        .main-stage { display: flex; gap: 30px; margin: 30px 0; }
+        .column { flex: 1; background: var(--card); border-radius: 40px; padding: 40px; border: 3px solid #334155; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
         
-        /* Prize Display */
+        .cat-label { color: var(--blue); font-weight: bold; letter-spacing: 3px; font-size: 0.9rem; margin-bottom: 10px; }
         .prize-img { width: 250px; height: 250px; object-fit: contain; background: #fff; border-radius: 20px; margin-bottom: 20px; border: 5px solid var(--gold); }
         .prize-display { font-size: 2.5rem; font-weight: 900; color: var(--gold); text-transform: uppercase; }
 
-        /* --- WINNER NAME STYLING --- */
-        .member-name { 
-            font-size: 5rem; 
-            font-weight: 900; 
-            color: var(--blue); 
-            text-transform: uppercase;
-            letter-spacing: -2px;
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            min-height: 1.2em;
-            display: flex;
-            align-items: center;
-            opacity: 0.6;
-        }
+        .member-name { font-size: 5rem; font-weight: 900; color: var(--blue); text-transform: uppercase; transition: all 0.5s; opacity: 0.6; line-height: 1; }
+        .winner-active .member-name { color: var(--white); text-shadow: 0 0 30px var(--blue), 0 0 80px var(--blue); transform: scale(1.1); opacity: 1; }
 
-        /* Winner Celebration State */
-        .winner-active .member-name {
-            color: var(--white);
-            text-shadow: 0 0 20px var(--blue), 0 0 40px var(--blue), 0 0 80px var(--blue);
-            transform: scale(1.15);
-            opacity: 1;
-        }
+        /* --- CATEGORY SELECTORS (Mobile Only) --- */
+        .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .cat-btn { background: #334155; border: 2px solid #475569; padding: 15px; color: white; border-radius: 15px; cursor: pointer; font-weight: bold; font-size: 0.8rem; }
+        .cat-btn.active { border-color: var(--gold); background: #1e293b; box-shadow: 0 0 15px rgba(251, 191, 36, 0.3); color: var(--gold); }
+        .cat-btn.finished { opacity: 0.3; cursor: not-allowed; }
 
-        /* --- BUTTONS --- */
-        .btn-draw { width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; border: none; font-size: 1.8rem; font-weight: 900; cursor: pointer; background: var(--gold); box-shadow: 0 8px 0 #b45309; color: #000; transition: 0.2s; }
+        /* --- DRAW BUTTON --- */
+        .btn-draw { width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; border: none; font-size: 1.8rem; font-weight: 900; cursor: pointer; background: var(--gold); box-shadow: 0 8px 0 #b45309; color: #000; margin-bottom: 10px; }
         .btn-next { background: var(--blue) !important; box-shadow: 0 8px 0 #0284c7 !important; color: white !important; }
-        .btn-draw:active { transform: translateY(4px); box-shadow: 0 4px 0 #b45309; }
-        .btn-draw:disabled { background: #475569 !important; box-shadow: none !important; color: #1e293b !important; cursor: not-allowed; }
+        .btn-draw:disabled { background: #475569 !important; box-shadow: none !important; opacity: 0.5; }
 
-        /* History */
-        .history { margin-top: 50px; text-align: left; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 20px; border: 1px solid #334155; }
-        #history-list { max-height: 300px; overflow-y: auto; padding-right: 10px; }
-        #history-list::-webkit-scrollbar { width: 6px; }
-        #history-list::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 10px; }
-        .winner-row { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #334155; }
+        .history { margin-top: 40px; text-align: left; background: rgba(0,0,0,0.3); padding: 25px; border-radius: 20px; border: 1px solid #334155; }
+        #history-list { max-height: 250px; overflow-y: auto; }
+        .winner-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #334155; font-size: 0.9rem; }
         
         @media (max-width: 768px) { .main-stage { flex-direction: column; } .member-name { font-size: 3rem; } }
     </style>
@@ -74,12 +52,12 @@
 <body>
 
     <div class="container">
-        <h1 style="letter-spacing: 5px; opacity: 0.3; margin-top: 20px;">ANNUAL DINNER LUCKY DRAW</h1>
+        <h1 style="letter-spacing: 5px; opacity: 0.3; margin-bottom: 20px;">ANNUAL DINNER LUCKY DRAW</h1>
 
         <div class="main-stage">
             <div class="column">
-                <div style="color: #94a3b8; font-weight: bold; margin-bottom: 15px; letter-spacing: 2px; font-size: 0.8rem;">CURRENT PRIZE</div>
-                <img id="prize-image" src="" class="prize-img">
+                <div id="cat-title" class="cat-label">SELECT CATEGORY</div>
+                <img id="prize-image" src="" class="prize-img" style="display:none;">
                 <div class="prize-display" id="prize-text">...</div>
             </div>
 
@@ -90,49 +68,61 @@
         </div>
 
         <div class="controls">
-            <button class="btn-draw" id="draw-btn" onclick="handleButtonClick()">Draw Now</button>
+            <!-- Category Buttons -->
+            <div class="cat-grid" id="cat-selectors">
+                <button class="cat-btn" id="btn-cat1" onclick="selectCategory(1)">Category 01</button>
+                <button class="cat-btn" id="btn-cat2" onclick="selectCategory(2)">Category 02</button>
+                <button class="cat-btn" id="btn-cat3" onclick="selectCategory(3)">Category 03</button>
+                <button class="cat-btn" id="btn-cat4" onclick="selectCategory(4)">Category 04</button>
+            </div>
+
+            <button class="btn-draw" id="draw-btn" onclick="handleButtonClick()" style="display:none;">Select Category First</button>
             <br>
-            <button onclick="triggerReset()" style="margin-top:40px; background:none; color:#ef4444; border:none; cursor:pointer; font-size: 11px; opacity: 0.4;">RESET SYSTEM</button>
+            <button onclick="triggerReset()" style="margin-top:20px; background:none; color:red; border:none; cursor:pointer; font-size: 10px; opacity: 0.4;">Full System Reset</button>
         </div>
 
         <div class="history">
-            <h3 style="color:var(--gold); margin-bottom: 15px; font-size: 0.9rem;">WINNERS LOG (<span id="rem-count">--</span> left)</h3>
+            <h3 style="color:var(--gold); margin-bottom: 15px; font-size: 0.9rem;">WINNERS LOG</h3>
             <div id="history-list"></div>
         </div>
     </div>
 
     <script>
         // ======================================================
-        // 1. DATA (Update your members and prizes)
+        // 1. DATA CONFIGURATION
         // ======================================================
-        const MEMBER_NAMES = ["TJ", "SzeWei", "YeKee", "Nicole", "ShuHan", "ShuFan", "Chang", "ZiYang", "D.Yong", "Joel", "ZhenHao", "Ah Fatt"]; 
-        const PRIZE_LIST = [
-            { name: "Jasmine Sunwhite Super Import (Wangi Thailand)", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA0ODAyM18y.jpg" },
+        const MEMBER_NAMES = ["TJ", "SzeWei", "YeKee", "Nicole", "ShuHan", "ShuFan", "Chang", "ZiYang", "D.Yong", "Joel", "ZhenHao", "Ah Fatt", "BENJAMIN", "BRYAN", "FERDIANTO", "KELVIN", "MATT", "ERAGON", "MUGUTHAN", "SHAUN LEE", "SHAYNE", "THIBAN"]; 
 
-            { name: "Nongshim Shin Ramyun Bowl", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTE0NDQ1NDFfMQ==.jpg" },
-
-            { name: "Maggi 2 Minute Curry 5+1 Instant Noodle", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA1OTU4OF9uZXcx.jpg" },
-
-            { name: "Red Eagle Cooking Oil", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA1NjI1Ml8x.jpg" },
-
-            { name: "Gula Prai Coarse Grain Sugar", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA3NzMxODVfMQ==.jpg" },
-
-            { name: "Ayam Brand Coconut Milk", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTAyNjk0OF8x.jpg" },
-
-            { name: "Lee Kum Kee Panda Oyster Sauce", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTg4ODQ5OF9uZXcx.jpg" },
-
-            { name: "Mi Sedaap Cup Noodle Goreng", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTcxNzU2OV8x.jpg" },
-
-            { name: "Nestle Nestum 3 In 1 Original", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NDA2MTc5M19uZXcx.jpg" },
-
-
-            { name: "Kara Coconut Cream", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTI2MjA3NzdfMQ==.jpg" },
-
-
-            { name: "Megah Claypot Yee Mee", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTcyMzM5M18y.jpg" },
-
-            { name: "Nestle School Pack", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTAxMDA1NV8y.jpg" }
-        ];
+        const PRIZE_CATEGORIES = {
+            1: [
+                { name: "Jasmine Sunwhite Super Import (Wangi Thailand)", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA0ODAyM18y.jpg" },
+                { name: "Nongshim Shin Ramyun Bowl", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTE0NDQ1NDFfMQ==.jpg" },
+                { name: "Maggi 2 Minute Curry 5+1 Instant Noodle", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA1OTU4OF9uZXcx.jpg" },
+                { name: "Red Eagle Cooking Oil", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA1NjI1Ml8x.jpg" },
+                { name: "Gula Prai Coarse Grain Sugar", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA3NzMxODVfMQ==.jpg" }
+            ],
+            2: [
+                { name: "Ayam Brand Coconut Milk", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTAyNjk0OF8x.jpg" },
+                { name: "Lee Kum Kee Panda Oyster Sauce", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTg4ODQ5OF9uZXcx.jpg" },
+                { name: "Mi Sedaap Cup Noodle Goreng", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTcxNzU2OV8x.jpg" },
+                { name: "Nestle Nestum 3 In 1 Original", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NDA2MTc5M19uZXcx.jpg" },
+                { name: "Kara Coconut Cream", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTI2MjA3NzdfMQ==.jpg" }
+            ],
+            3: [
+                { name: "Megah Claypot Yee Mee", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTcyMzM5M18y.jpg" },
+                { name: "Nestle School Pack", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTAxMDA1NV8y.jpg" },
+                { name: "Jasmine Sunwhite Super Import (Wangi Thailand)", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA0ODAyM18y.jpg" },
+                { name: "Nongshim Shin Ramyun Bowl", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTE0NDQ1NDFfMQ==.jpg" },
+                { name: "Maggi 2 Minute Curry 5+1 Instant Noodle", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA1OTU4OF9uZXcx.jpg" }
+            ],
+            4: [
+                { name: "Red Eagle Cooking Oil", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA1NjI1Ml8x.jpg" },
+                { name: "Gula Prai Coarse Grain Sugar", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTA3NzMxODVfMQ==.jpg" },
+                { name: "Ayam Brand Coconut Milk", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/MTAyNjk0OF8x.jpg" },
+                { name: "Lee Kum Kee Panda Oyster Sauce", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTg4ODQ5OF9uZXcx.jpg" },
+                { name: "Mi Sedaap Cup Noodle Goreng", img: "https://catalog-assets-asia-southeast1.aeon-my-prod.e.spresso.com/c3RvcmFnZS5nb29nbGVhcGlzLmNvbQ==/YWVvbm1hbGF5c2lhLWJveGVkLXB1YmxpYw==/U3VwZXJtYXJrZXQ=/NTcxNzU2OV8x.jpg" }
+            ]
+        };
 
         // ======================================================
         // 2. FIREBASE CONFIG
@@ -151,7 +141,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         let currentStatus = 'idle';
-        let hasCelebrated = false; // Prevents confetti looping
+        let currentActiveCat = null;
+        let hasCelebrated = false;
 
         if (new URLSearchParams(window.location.search).has('view')) document.body.classList.add('view-display');
 
@@ -164,13 +155,23 @@
             if (!data) return;
 
             currentStatus = data.status;
+            currentActiveCat = data.activeCategory;
             const btn = document.getElementById('draw-btn');
 
-            updatePrizeUI(data.currentPrize);
-            document.getElementById('rem-count').textContent = data.remCount;
+            // Sync Prize UI
+            if (currentActiveCat) {
+                updatePrizeUI(currentActiveCat, data.counters[currentActiveCat]);
+                document.getElementById('cat-title').textContent = "CATEGORY 0" + currentActiveCat;
+                btn.style.display = "block";
+                
+                // Highlight active category button on mobile
+                document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('btn-cat' + currentActiveCat).classList.add('active');
+            }
 
+            // Button Logic
             if (data.status === 'idle') {
-                hasCelebrated = false; // Reset for next round
+                hasCelebrated = false;
                 resetWinnerUI();
                 btn.textContent = "Draw Now";
                 btn.classList.remove('btn-next');
@@ -186,16 +187,33 @@
                 btn.disabled = false;
                 btn.textContent = "Next Prize";
                 btn.classList.add('btn-next');
-                
-                // CELEBRATE!
-                if (!hasCelebrated) {
-                    launchCelebration();
-                    hasCelebrated = true;
-                }
+                if (!hasCelebrated) { launchCelebration(); hasCelebrated = true; }
             }
 
             renderHistory(data.history);
         });
+
+        // ACTIONS
+        async function selectCategory(num) {
+            const snap = await db.ref('drawState').get();
+            let state = snap.val();
+
+            // Init database if first time
+            if (!state) {
+                state = {
+                    status: 'idle', activeCategory: num,
+                    counters: { 1: 1, 2: 1, 3: 1, 4: 1 },
+                    available: MEMBER_NAMES.map(name => ({ name: name })),
+                    history: []
+                };
+                await db.ref('drawState').set(state);
+                return;
+            }
+
+            // Change Category
+            if (state.status === 'shuffling') return;
+            await db.ref('drawState').update({ activeCategory: num, status: 'idle' });
+        }
 
         function handleButtonClick() {
             if (currentStatus === 'idle') triggerDraw();
@@ -204,74 +222,46 @@
 
         async function triggerDraw() {
             const snap = await db.ref('drawState').get();
-            let state = snap.val();
+            const state = snap.val();
+            const pool = state.available;
+            const cat = state.activeCategory;
+            const idx = state.counters[cat];
 
-            if (!state) {
-                state = {
-                    status: 'idle', currentPrize: 1, remCount: MEMBER_NAMES.length,
-                    available: MEMBER_NAMES.map(name => ({ name: name })),
-                    history: []
-                };
-                await db.ref('drawState').set(state);
-            }
-
-            if (state.available.length === 0) return alert("All members have won!");
+            if (idx > 5) return alert("Category Finished!");
+            if (pool.length === 0) return alert("No members left!");
 
             db.ref('drawState').update({ status: 'shuffling' });
 
             setTimeout(async () => {
-                const pool = state.available;
                 const winIdx = Math.floor(Math.random() * pool.length);
                 const winner = pool[winIdx];
-                
+                const prize = PRIZE_CATEGORIES[cat][idx - 1];
+
                 const newAvailable = pool.filter((_, i) => i !== winIdx);
                 const newHistory = state.history ? [...state.history] : [];
-                const pName = PRIZE_LIST[state.currentPrize - 1]?.name || "Prize";
-                
-                newHistory.unshift({ prize: pName, member: winner });
+                newHistory.unshift({ cat: cat, prizeName: prize.name, member: winner });
+
+                const newCounters = {...state.counters};
+                newCounters[cat] = idx + 1;
 
                 await db.ref('drawState').update({
                     status: 'winner',
                     winner: winner,
                     available: newAvailable,
                     history: newHistory,
-                    remCount: newAvailable.length
+                    counters: newCounters
                 });
             }, 3000);
         }
 
         async function triggerNext() {
-            const snap = await db.ref('drawState').get();
-            const state = snap.val();
-            await db.ref('drawState').update({ status: 'idle', currentPrize: state.currentPrize + 1 });
-        }
-
-        // --- CELEBRATION EFFECT ---
-        function launchCelebration() {
-            // Left burst
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { x: 0.1, y: 0.5 }
-            });
-            // Right burst
-            confetti({
-                particleCount: 150,
-                spread: 70,
-                origin: { x: 0.9, y: 0.5 }
-            });
-            // Center top
-            confetti({
-                particleCount: 100,
-                spread: 100,
-                origin: { y: 0.3 }
-            });
+            await db.ref('drawState').update({ status: 'idle' });
         }
 
         // --- UI HELPERS ---
-        function updatePrizeUI(prizeNumber) {
-            const idx = prizeNumber - 1;
-            const prize = PRIZE_LIST[idx] || { name: "Event Finished", img: "" };
+        function updatePrizeUI(cat, count) {
+            const idx = count - 1;
+            const prize = (PRIZE_CATEGORIES[cat] && PRIZE_CATEGORIES[cat][idx]) || { name: "Category Done", img: "" };
             document.getElementById('prize-text').textContent = prize.name;
             if (prize.img) {
                 document.getElementById('prize-image').src = prize.img;
@@ -279,6 +269,11 @@
             } else {
                 document.getElementById('prize-image').style.display = "none";
             }
+        }
+
+        function launchCelebration() {
+            confetti({ particleCount: 150, spread: 70, origin: { x: 0.2, y: 0.6 } });
+            confetti({ particleCount: 150, spread: 70, origin: { x: 0.8, y: 0.6 } });
         }
 
         let shuffleInterval;
@@ -310,15 +305,16 @@
             hist.forEach(h => {
                 const row = document.createElement('div');
                 row.className = "winner-row";
-                row.innerHTML = `<b style="color:var(--gold)">${h.prize}</b> <span>${h.member.name}</span>`;
+                row.innerHTML = `<span><b>Cat ${h.cat}:</b> ${h.prizeName}</span> <span style="color:var(--blue)">${h.member.name}</span>`;
                 list.appendChild(row);
             });
         }
 
         async function triggerReset() {
-            if(!confirm("Reset everything to Prize 01?")) return;
+            if(!confirm("DANGER: This resets ALL categories and winners. Proceed?")) return;
             await db.ref('drawState').set({
-                status: 'idle', currentPrize: 1, remCount: MEMBER_NAMES.length,
+                status: 'idle', activeCategory: 1,
+                counters: { 1: 1, 2: 1, 3: 1, 4: 1 },
                 available: MEMBER_NAMES.map(name => ({ name: name })),
                 history: []
             });
